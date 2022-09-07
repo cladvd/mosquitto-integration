@@ -1,0 +1,105 @@
+import Foundation
+import CocoaMQTT
+
+protocol MQTTManager: ObservableObject {
+    func connect()
+    func subscribe(to topic: String, with qos: CocoaMQTTQoS)
+    func publish(_ message: String, on topic: String)
+    func disconnect()
+}
+
+extension MQTTManager {
+    func subscribe(to topic: String,
+                   with qos: CocoaMQTTQoS = .qos1) {
+        return subscribe(to: topic, with: qos)
+    }
+}
+
+class CocoaMQTT5Manager: MQTTManager {
+    private let mqtt5: CocoaMQTT5
+    
+    internal init(clientID: String,
+                  host: String,
+                  port: UInt16) {
+    
+
+        mqtt5 = CocoaMQTT5.init(clientID: clientID,
+                                host: host,
+                                port: port)
+        mqtt5.delegate = self
+        mqtt5.logLevel = .debug
+        
+    }
+    
+    func connect() {
+       _ = mqtt5.connect()
+    }
+    
+    func subscribe(to topic: String, with qos: CocoaMQTTQoS) {
+        mqtt5.subscribe(topic, qos: qos)
+    }
+    
+    func publish(_ message: String, on topic: String) {
+        let properties = MqttPublishProperties()
+        let cocoaMQTT5Message = CocoaMQTT5Message(topic: topic,
+                                                  string: message)
+        mqtt5.publish(cocoaMQTT5Message, properties: properties)
+    }
+    
+    func disconnect() {
+        mqtt5.disconnect()
+    }
+}
+
+extension CocoaMQTT5Manager: CocoaMQTT5Delegate {
+    func mqtt5DidPing(_ mqtt5: CocoaMQTT5) {
+        print("\(#file) \(#function)")
+    }
+    
+    func mqtt5DidReceivePong(_ mqtt5: CocoaMQTT5) {
+        print("\(#file) \(#function)")
+    }
+    
+    func mqtt5DidDisconnect(_ mqtt5: CocoaMQTT5, withError err: Error?) {
+        print("\(#file) \(#function) err: \(err.debugDescription)")
+    }
+    
+    func mqtt5(_ mqtt5: CocoaMQTT5, didConnectAck ack: CocoaMQTTCONNACKReasonCode, connAckData: MqttDecodeConnAck?) {
+        print("\(#file) \(#function)")
+    }
+    
+    func mqtt5(_ mqtt5: CocoaMQTT5, didPublishMessage message: CocoaMQTT5Message, id: UInt16) {
+        print("\(#file) \(#function) " + (message.string ?? ""))
+    }
+    
+    func mqtt5(_ mqtt5: CocoaMQTT5, didPublishAck id: UInt16, pubAckData: MqttDecodePubAck?) {
+        print("\(#file) \(#function)")
+    }
+    
+    
+    func mqtt5(_ mqtt5: CocoaMQTT5, didPublishRec id: UInt16, pubRecData: MqttDecodePubRec?) {
+        print("\(#file) \(#function)")
+    }
+    
+    func mqtt5(_ mqtt5: CocoaMQTT5, didReceiveMessage message: CocoaMQTT5Message, id: UInt16, publishData: MqttDecodePublish?) {
+        print("\(#file) \(#function) " + (message.string ?? ""))
+    }
+    
+    func mqtt5(_ mqtt5: CocoaMQTT5, didSubscribeTopics success: NSDictionary, failed: [String], subAckData: MqttDecodeSubAck?) {
+        print("\(#file) \(#function) \(success) \(failed)")
+    }
+    
+    
+    func mqtt5(_ mqtt5: CocoaMQTT5, didUnsubscribeTopics topics: [String], UnsubAckData: MqttDecodeUnsubAck?) {
+        print("\(#file) \(#function) \(topics)")
+    }
+    
+    func mqtt5(_ mqtt5: CocoaMQTT5, didReceiveDisconnectReasonCode reasonCode: CocoaMQTTDISCONNECTReasonCode) {
+        print("\(#file) \(#function) \(reasonCode)")
+    }
+    
+    func mqtt5(_ mqtt5: CocoaMQTT5, didReceiveAuthReasonCode reasonCode: CocoaMQTTAUTHReasonCode) {
+        print("\(#file) \(#function) \(reasonCode)")
+        
+    }
+}
